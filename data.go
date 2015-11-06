@@ -228,7 +228,10 @@ func NewRequest(r *http.Request, baseURL *url.URL) (*Request, error) {
 
 	path := r.URL.Path[1:] // strip leading slash
 	req.URL, err = url.Parse(path)
-	if err != nil || !req.URL.IsAbs() {
+
+	iopts := r.URL.Query().Get("iopts")
+
+	if (err != nil || !req.URL.IsAbs()) && len(iopts) < 1 {
 		// first segment should be options
 		parts := strings.SplitN(path, "/", 2)
 		if len(parts) != 2 {
@@ -242,6 +245,11 @@ func NewRequest(r *http.Request, baseURL *url.URL) (*Request, error) {
 		}
 
 		req.Options = ParseOptions(parts[0])
+	}
+
+	if len(iopts) > 0 {
+		req.URL.Query().Del("iopts")
+		req.Options = ParseOptions(iopts)
 	}
 
 	if baseURL != nil {
