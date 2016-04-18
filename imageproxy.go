@@ -62,6 +62,9 @@ type Proxy struct {
 
 	// Allow images to scale beyond their original dimensions.
 	ScaleUp bool
+
+	// Use ?iopts=[options] instead of the first element in the path
+	IoptsMode bool
 }
 
 // NewProxy constructs a new proxy.  The provided http RoundTripper will be
@@ -102,7 +105,7 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req, err := NewRequest(r, p.DefaultBaseURL)
+	req, err := NewRequest(r, p.DefaultBaseURL, p.IoptsMode)
 	if err != nil {
 		msg := fmt.Sprintf("invalid request URL: %v", err)
 		glog.Error(msg)
@@ -130,7 +133,7 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: DRY that
 	if resp.StatusCode == 404 {
-		glog.Error("got 404 while fetching remote image. Trying to fetch the full original URL.")
+		glog.Errorf("got 404 while fetching remote image (%s). Trying to fetch the full original URL (%s).", req.String(), req.Original.URL)
 		resp, err = p.Client.Get(p.DefaultBaseURL.ResolveReference(req.Original.URL).String())
 		if err != nil {
 			msg := fmt.Sprintf("error fetching remote image: %v", err)

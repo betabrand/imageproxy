@@ -229,7 +229,7 @@ func (r Request) String() string {
 // 	http://localhost/100x200,r90/http://example.com/image.jpg?foo=bar
 // 	http://localhost//http://example.com/image.jpg
 // 	http://localhost/http://example.com/image.jpg
-func NewRequest(r *http.Request, baseURL *url.URL) (*Request, error) {
+func NewRequest(r *http.Request, baseURL *url.URL, ioptsMode bool) (*Request, error) {
 	var err error
 	req := &Request{Original: r}
 
@@ -244,9 +244,9 @@ func NewRequest(r *http.Request, baseURL *url.URL) (*Request, error) {
 	}
 
 	if err != nil || !req.URL.IsAbs() {
-		if len(iopts) > 0 {
+		if len(iopts) > 0 && ioptsMode {
 			options = iopts
-		} else {
+		} else if !ioptsMode {
 			// first segment should be options
 			parts := strings.SplitN(path, "/", 2)
 			if len(parts) != 2 {
