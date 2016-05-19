@@ -128,6 +128,19 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer resp.Body.Close()
 
+	// TODO: DRY that
+	if resp.StatusCode == 404 {
+		glog.Errorf("got 404 while fetching remote image (%s). Trying to fetch the full original URL (%s).", req.String(), req.Original.URL)
+		resp, err = p.Client.Get(p.DefaultBaseURL.ResolveReference(req.Original.URL).String())
+		if err != nil {
+			msg := fmt.Sprintf("error fetching remote image: %v", err)
+			glog.Error(msg)
+			http.Error(w, msg, http.StatusInternalServerError)
+			return
+		}
+		defer resp.Body.Close()
+	}
+
 	cached := resp.Header.Get(httpcache.XFromCache)
 	glog.Infof("request: %v (served from cache: %v)", *req, cached == "1")
 
