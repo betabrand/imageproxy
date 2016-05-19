@@ -84,6 +84,8 @@ type Proxy struct {
 
 	// The User-Agent used by imageproxy when requesting origin image
 	UserAgent string
+	// Use ?iopts=[options] instead of the first element in the path
+	IoptsMode bool
 }
 
 // NewProxy constructs a new proxy.  The provided http RoundTripper will be
@@ -141,7 +143,7 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // serveImage handles incoming requests for proxied images.
 func (p *Proxy) serveImage(w http.ResponseWriter, r *http.Request) {
-	req, err := NewRequest(r, p.DefaultBaseURL)
+	req, err := NewRequest(r, p.DefaultBaseURL, p.IoptsMode)
 	if err != nil {
 		msg := fmt.Sprintf("invalid request URL: %v", err)
 		p.log(msg)
